@@ -1,0 +1,32 @@
+total = pd.read_csv('total.csv', encoding='latin-1')
+
+
+from collections import Counter
+import numpy as np 
+import string
+import re
+def clean_text(text):
+    global EMPTY
+    EMPTY = '' “
+    
+    if not isinstance(text, str): 
+        return text
+    text = re.sub('<pre><code>.*?</code></pre>', EMPTY, text)
+def replace_link(match):
+        return EMPTY if re.match('[a-z]+://', match.group(1)) else match.group(1)
+    
+    text = re.sub('<a[^>]+>(.*)</a>', replace_link, text)
+    return re.sub('<[^>]+>', EMPTY, text)
+
+
+total = total[(total.Tag == 'c#') | (total.Tag == 'java') | (total.Tag == 'php') | (total.Tag =='javascript') |
+(total.Tag =='jquery') | (total.Tag == 'android') | (total.Tag == 'c++') | (total.Tag == 'iphone') | (total.Tag ==
+'python') | (total.Tag == 'asp.net')]
+
+# Then we create a new “Text” column for cleaned text from “Body” column.
+
+total['Text'] = total['Body'].apply(clean_text).str.lower()
+total.Text = total.Text.apply(lambda x: x.replace('"','').replace("\n","").replace("\t",""))
+
+
+
