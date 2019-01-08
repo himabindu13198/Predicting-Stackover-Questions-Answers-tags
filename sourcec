@@ -1,0 +1,103 @@
+##Importing Necessary Files
+
+import pandas as pd
+import numpy as np
+import pickle
+from keras.preprocessing.text import Tokenizer
+from keras.models import Sequential
+from keras.layers import Activation, Dense, Dropout
+from sklearn.preprocessing import LabelBinarizer
+import sklearn.datasets as skds
+from pathlib import Path
+import nltk
+nltk.download('stopwords')
+
+##Importing the Datasets
+Text=pd.read_csv("Text.csv",header=None)
+Text.head()
+Tags=pd.read_csv("Tags.csv",header=None)
+Tag.head()
+from nltk.corpus import stopwords
+from nltk.stem.porter import PorterStemmer
+corpus = []
+
+2
+
+##Removing Stopwords
+for i in range(0, 826510):
+review = Text[1][i]
+review = review.lower()
+review = review.split()
+ps = PorterStemmer()
+review = [ps.stem(word) for word in review if not word in set(stopwords.words('english'))]
+review = ' '.join(review)
+corpus.append(review)
+
+##Splitting datasets to Train and Test datasets
+train_size = int(len(corpus) * .8)
+train_posts = corpus[:train_size]
+train_tags = Tags[:train_size]
+test_posts = corpus[train_size:]
+test_tags = Tags[train_size:]
+num_labels = 10
+vocab_size = 150000
+batch_size = 100
+
+#Defining Tokenizer with Vocab Size
+tokenizer = Tokenizer(num_words=vocab_size)
+tokenizer.fit_on_texts(train_posts)
+x_train = tokenizer.texts_to_matrix(train_posts, mode='tfidf')
+
+3
+
+x_test = tokenizer.texts_to_matrix(test_posts, mode='tfidf')
+encoder = LabelBinarizer()
+encoder.fit(train_tags)
+y_train = encoder.transform(train_tags)
+y_test = encoder.transform(test_tags)
+
+##Building and Training using Keras
+
+model = Sequential()
+model.add(Dense(512, input_shape=(vocab_size,)))
+model.add(Activation('relu'))
+model.add(Dropout(0.3))
+model.add(Dense(512))
+model.add(Activation('relu'))
+model.add(Dropout(0.3))
+model.add(Dense(num_labels))
+model.add(Activation('softmax'))
+model.summary()
+
+model.compile(loss='categorical_crossentropy',
+optimizer='adam',
+metrics=['accuracy'])
+
+4
+
+history = model.fit(x_train, y_train,
+batch_size=batch_size,
+epochs=30,
+verbose=1,
+validation_split=0.1)
+
+##Evaluationg the Model
+
+score = model.evaluate(x_test, y_test,batch_size=batch_size, verbose=1)
+print('Test accuracy:', score[1])
+text_labels = encoder.classes_
+for i in range(10):
+prediction = model.predict(np.array([x_test[i]]))
+predicted_label = text_labels[np.argmax(prediction[0])]
+print(test_files_names.iloc[i])
+print('Actual label:' + test_tags.iloc[i])
+print("Predicted label: " + predicted_label)
+
+##Note: Stopwords are those words which are not necessary to train the model. They do not qualify
+as valid parameters. For eg : in “What is the function of reshape function in openGL” , the
+stopwords are : ‘what’,’is’,’the’,’of’,’in’. There is a pre existing library that contains all such
+stopwords in the English language which has been used in our assignment. PosterStemmer helps
+to delete such content from our corpus.
+Tokenizer is used to convert the content of our dataset (csv files) into vectors that can be fed to
+the model
+
